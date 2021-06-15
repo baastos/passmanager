@@ -29,6 +29,8 @@ const schema = Yup.object().shape({
 })
 
 export function RegisterLoginData() {
+  const STORAGE_KEY = "@passmanager:logins"
+
   const {
     control,
     handleSubmit,
@@ -36,17 +38,21 @@ export function RegisterLoginData() {
     formState: {
       errors
     }
-  } = useForm();
+  } = useForm({
+    resolver: yupResolver(schema)
+  });
 
   async function handleRegister(formData: FormData) {
+
     const newLoginData = {
       id: String(uuid.v4()),
       ...formData
     }
-
-    // Save data on AsyncStorage
+    const response = await AsyncStorage.getItem(STORAGE_KEY)
+    const storagedLogins = response ? JSON.parse(response) : []
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify([...storagedLogins, newLoginData]))
+    reset()
   }
-
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
@@ -60,10 +66,8 @@ export function RegisterLoginData() {
           <Input
             title="Título"
             name="title"
-            error={
-              // message error here
-            }
             control={control}
+            error={errors.title?.message}
             placeholder="Escreva o título aqui"
             autoCapitalize="sentences"
             autoCorrect
@@ -71,10 +75,8 @@ export function RegisterLoginData() {
           <Input
             title="Email"
             name="email"
-            error={
-              // message error here
-            }
             control={control}
+            error={errors.email?.message}
             placeholder="Escreva o Email aqui"
             autoCorrect={false}
             autoCapitalize="none"
@@ -83,10 +85,8 @@ export function RegisterLoginData() {
           <Input
             title="Senha"
             name="password"
-            error={
-              // message error here
-            }
             control={control}
+            error={errors.password?.message}
             secureTextEntry
             placeholder="Escreva a senha aqui"
           />
